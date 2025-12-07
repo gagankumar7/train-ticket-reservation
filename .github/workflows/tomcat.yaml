@@ -1,4 +1,4 @@
-name: CI/CD Pipeline for TrainBook
+name: CI/CD pipeline to Deploy to Tomcat
 
 on:
   push:
@@ -10,33 +10,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup JDK 17
       - name: Setup JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3️⃣ Configure Maven with settings.xml for Nexus
-      - name: Configure Maven for Nexus
-        run: |
-          mkdir -p ~/.m2
-          printf "%s\n" "${{ secrets.MAVEN_SETTINGS }}" > ~/.m2/settings.xml
+      - name: Maven validate
+        run: mvn validate
 
-      # 4️⃣ Maven Build & Package
-      - name: Maven Build & Package
-        run: mvn clean package -DskipTests=true
+      - name: Maven compile
+        run: mvn compile
 
-      # 5️⃣ SonarQube Analysis
-      - name: SonarQube Code Quality
+      - name: Maven test
+        run: mvn test
+
+      - name: Sonar Code Quality
         run: |
-          mvn sonar:sonar \
+          mvn clean verify sonar:sonar \
             -Dsonar.projectKey=train-ticket \
             -Dsonar.host.url=${{ secrets.SONAR_HOST }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      # 6️⃣ Deploy Arti
+      - name: Maven package
+        run: mvn package
+
+      - name: Deploy to Tomcat
+        run: |
+          curl -v -u ${{ secrets.TOMCAT_USER }}:${{ secrets.TOMCAT_PASSWORD }} \
+            -T target/TrainBook-1.0.0-SNAPSHOT.war \
+            "http://${{ secrets.TOMCAT_HOST }}:8080/manager/text/deploy?path=/vcube140&update=true"
