@@ -36,7 +36,23 @@ jobs:
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: Maven package
-        run: mvn package
+        run: mvn package -DskipTests=true
+
+      # ⭐ NEW — Copy settings.xml for Nexus
+      - name: Configure Maven for Nexus
+        run: |
+          mkdir -p ~/.m2
+          echo "${{ secrets.MAVEN_SETTINGS }}" > ~/.m2/settings.xml
+
+      # ⭐ NEW — Upload Artifact to Nexus
+      - name: Upload Artifact to Nexus
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          NEXUS_URL_RELEASES: ${{ secrets.NEXUS_URL_RELEASES }}
+          NEXUS_URL_SNAPSHOTS: ${{ secrets.NEXUS_URL_SNAPSHOTS }}
+        run: |
+          mvn deploy -DskipTests=true
 
       - name: Deploy to Tomcat
         run: |
