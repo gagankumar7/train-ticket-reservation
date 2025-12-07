@@ -1,17 +1,14 @@
 <settings>
   <servers>
     <server>
-      <id>nexus</id>
-      <username>${env.NEXUS_USERNAME}</username>
-      <password>${env.NEXUS_PASSWORD}</password>
+      <id>nexus-snapshots</id>
+      <username>admin</username>
+      <password>Gagan@123456</password>
+    </server>
+    <server>
+      <id>nexus-releases</id>
+      <username>admin</username>
+      <password>Gagan@123456</password>
     </server>
   </servers>
-  <mirrors>
-    <mirror>
-      <id>central</id>
-      <name>Nexus Mirror</name>
-      <url>https://nexus.example.com/repository/maven-public/</url>
-      <mirrorOf>*</mirrorOf>
-    </mirror>
-  </mirrors>
 </settings>
