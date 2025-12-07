@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout code
+      # 1️⃣ Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -27,44 +27,39 @@ jobs:
           mkdir -p ~/.m2
           echo "${{ secrets.MAVEN_SETTINGS }}" > ~/.m2/settings.xml
 
-      # 4️⃣ Maven validate
-      - name: Maven validate
-        run: mvn validate
+      # 4️⃣ Maven build (validate, compile, test, package)
+      - name: Maven build
+        run: mvn clean package -DskipTests=true
 
-      # 5️⃣ Maven compile
-      - name: Maven compile
-        run: mvn compile
-
-      # 6️⃣ Maven test
-      - name: Maven test
-        run: mvn test
-
-      # 7️⃣ SonarQube analysis
+      # 5️⃣ SonarQube Analysis
       - name: SonarQube Code Quality
         run: |
-          mvn clean verify sonar:sonar \
+          mvn sonar:sonar \
             -Dsonar.projectKey=train-ticket \
             -Dsonar.host.url=${{ secrets.SONAR_HOST }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      # 8️⃣ Maven deploy to Nexus
+      # 6️⃣ Deploy to Nexus
       - name: Deploy Artifact to Nexus
         run: |
-          # Detect if version is SNAPSHOT or RELEASE
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "Project version: $VERSION"
 
           if [[ "$VERSION" == *"SNAPSHOT"* ]]; then
             echo "Deploying to Nexus SNAPSHOT repository"
-            mvn clean deploy -DskipTests=true -DaltDeploymentRepository=nexus-snapshots::default::${{ secrets.NEXUS_URL_SNAPSHOTS }}
+            mvn deploy -DskipTests=true \
+              -DaltDeploymentRepository=nexus-snapshots::default::${{ secrets.NEXUS_URL_SNAPSHOTS }}
           else
             echo "Deploying to Nexus RELEASE repository"
-            mvn clean deploy -DskipTests=true -DaltDeploymentRepository=nexus-releases::default::${{ secrets.NEXUS_URL_RELEASES }}
+            mvn deploy -DskipTests=true \
+              -DaltDeploymentRepository=nexus-releases::default::${{ secrets.NEXUS_URL_RELEASES }}
           fi
 
-      # 9️⃣ Deploy WAR to Tomcat
+      # 7️⃣ Deploy WAR to Tomcat
       - name: Deploy WAR to Tomcat
         run: |
+          WAR_FILE="target/TrainBook-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout).war"
+          echo "Deploying $WAR_FILE to Tomcat"
           curl -v -u ${{ secrets.TOMCAT_USER }}:${{ secrets.TOMCAT_PASSWORD }} \
-            -T target/TrainBook-1.0.0-SNAPSHOT.war \
+            -T "$WAR_FILE" \
             "http://${{ secrets.TOMCAT_HOST }}:8080/manager/text/deploy?path=/vcube140&update=true"
