@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the code
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -21,15 +21,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3️⃣ Configure Maven with settings.xml (fixed multi-line secret issue)
+      # 3️⃣ Configure Maven with settings.xml for Nexus
       - name: Configure Maven for Nexus
         run: |
           mkdir -p ~/.m2
-          cat <<EOF > ~/.m2/settings.xml
-          ${{ secrets.MAVEN_SETTINGS }}
-          EOF
+          printf "%s\n" "${{ secrets.MAVEN_SETTINGS }}" > ~/.m2/settings.xml
 
-      # 4️⃣ Maven build (clean, compile, test, package)
+      # 4️⃣ Maven Build & Package
       - name: Maven Build & Package
         run: mvn clean package -DskipTests=true
 
@@ -41,27 +39,4 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONAR_HOST }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      # 6️⃣ Deploy Artifact to Nexus (detect SNAPSHOT vs RELEASE)
-      - name: Deploy Artifact to Nexus
-        run: |
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "Project version: $VERSION"
-
-          if [[ "$VERSION" == *"SNAPSHOT"* ]]; then
-            echo "Deploying to Nexus SNAPSHOT repository"
-            mvn deploy -DskipTests=true \
-              -DaltDeploymentRepository=nexus-snapshots::default::${{ secrets.NEXUS_URL_SNAPSHOTS }}
-          else
-            echo "Deploying to Nexus RELEASE repository"
-            mvn deploy -DskipTests=true \
-              -DaltDeploymentRepository=nexus-releases::default::${{ secrets.NEXUS_URL_RELEASES }}
-          fi
-
-      # 7️⃣ Deploy WAR to Tomcat
-      - name: Deploy WAR to Tomcat
-        run: |
-          WAR_FILE="target/TrainBook-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout).war"
-          echo "Deploying $WAR_FILE to Tomcat"
-          curl -v -u ${{ secrets.TOMCAT_USER }}:${{ secrets.TOMCAT_PASSWORD }} \
-            -T "$WAR_FILE" \
-            "http://${{ secrets.TOMCAT_HOST }}:8080/manager/text/deploy?path=/vcube140&update=true"
+      # 6️⃣ Deploy Arti
