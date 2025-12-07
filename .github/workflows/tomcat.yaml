@@ -38,6 +38,14 @@ jobs:
       - name: Maven package
         run: mvn package -DskipTests
 
+      - name: Upload Artifact to Nexus
+        run: |
+          mvn deploy \
+            -DskipTests \
+            -DaltDeploymentRepository=nexus::default::${{ secrets.NEXUS_URL }} \
+            -Dnexus.username=${{ secrets.NEXUS_USERNAME }} \
+            -Dnexus.password=${{ secrets.NEXUS_PASSWORD }}
+
       - name: Deploy to Tomcat
         run: |
           curl -v -u ${{ secrets.TOMCAT_USER }}:${{ secrets.TOMCAT_PASSWORD }} \
