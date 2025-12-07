@@ -50,7 +50,7 @@ jobs:
       - name: Configure Maven for Nexus
         run: |
           mkdir -p ~/.m2
-          cp .github/maven_settings/settings.xml ~/.m2/settings.xml
+          echo "${{ secrets.MAVEN_SETTINGS }}" > ~/.m2/settings.xml
 
       # 9️⃣ Upload Artifact to Nexus
       - name: Upload Artifact to Nexus
