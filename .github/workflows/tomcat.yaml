@@ -36,7 +36,7 @@ jobs:
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: Maven package
-        run: mvn package -DskipTests
+        run: mvn package
 
       - name: Deploy to Tomcat
         run: |
