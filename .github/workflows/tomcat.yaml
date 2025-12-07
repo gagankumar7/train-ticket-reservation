@@ -21,14 +21,16 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3️⃣ Configure Maven with settings.xml
+      # 3️⃣ Configure Maven with settings.xml (fixed multi-line secret issue)
       - name: Configure Maven for Nexus
         run: |
           mkdir -p ~/.m2
-          echo "${{ secrets.MAVEN_SETTINGS }}" > ~/.m2/settings.xml
+          cat <<EOF > ~/.m2/settings.xml
+          ${{ secrets.MAVEN_SETTINGS }}
+          EOF
 
-      # 4️⃣ Maven build (validate, compile, test, package)
-      - name: Maven build
+      # 4️⃣ Maven build (clean, compile, test, package)
+      - name: Maven Build & Package
         run: mvn clean package -DskipTests=true
 
       # 5️⃣ SonarQube Analysis
@@ -39,7 +41,7 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONAR_HOST }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      # 6️⃣ Deploy to Nexus
+      # 6️⃣ Deploy Artifact to Nexus (detect SNAPSHOT vs RELEASE)
       - name: Deploy Artifact to Nexus
         run: |
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
