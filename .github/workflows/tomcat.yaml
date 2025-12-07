@@ -28,6 +28,13 @@ jobs:
       - name: Maven test
         run: mvn test
 
+      - name: Sonar Code Quality
+        run: |
+          mvn clean verify sonar:sonar \
+            -Dsonar.projectKey=train-ticket \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST }} \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
       - name: Maven package
         run: mvn package -DskipTests
 
