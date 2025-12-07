@@ -1,4 +1,9 @@
-<settings>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                              https://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+  <!-- ✅ Server credentials for deploying to Nexus -->
   <servers>
     <server>
       <id>nexus</id>
@@ -6,6 +11,8 @@
       <password>${env.NEXUS_PASSWORD}</password>
     </server>
   </servers>
+
+  <!-- ✅ Optional: Mirror for Maven Central -->
   <mirrors>
     <mirror>
       <id>central</id>
@@ -14,4 +21,5 @@
       <mirrorOf>*</mirrorOf>
     </mirror>
   </mirrors>
+
 </settings>
