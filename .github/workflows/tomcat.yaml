@@ -8,6 +8,15 @@ on:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    env:
+      SONAR_HOST: ${{ secrets.SONAR_HOST }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      NEXUS_URL: ${{ secrets.NEXUS_URL }}
+      NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+      NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+      TOMCAT_HOST: ${{ secrets.TOMCAT_HOST }}
+      TOMCAT_USER: ${{ secrets.TOMCAT_USER }}
+      TOMCAT_PASSWORD: ${{ secrets.TOMCAT_PASSWORD }}
 
     steps:
       # 1️⃣ Checkout code
@@ -21,44 +30,55 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3️⃣ Maven Validate
+      # 3️⃣ Configure Maven settings.xml with Nexus credentials
+      - name: Configure Maven settings
+        run: |
+          mkdir -p $HOME/.m2
+          cat > $HOME/.m2/settings.xml <<EOF
+          <settings>
+            <servers>
+              <server>
+                <id>nexus</id>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+
+      # 4️⃣ Maven Validate
       - name: Maven validate
         run: mvn validate -Dproject.build.sourceEncoding=UTF-8
 
-      # 4️⃣ Maven Compile
+      # 5️⃣ Maven Compile
       - name: Maven compile
         run: mvn compile -Dproject.build.sourceEncoding=UTF-8
 
-      # 5️⃣ Maven Test
+      # 6️⃣ Maven Test
       - name: Maven test
         run: mvn test -Dproject.build.sourceEncoding=UTF-8
 
-      # 6️⃣ SonarQube Code Quality
+      # 7️⃣ SonarQube Code Quality
       - name: Sonar Code Quality
         run: |
           mvn clean verify sonar:sonar \
             -Dsonar.projectKey=train-ticket \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.host.url=${SONAR_HOST} \
+            -Dsonar.login=${SONAR_TOKEN} \
             -Dproject.build.sourceEncoding=UTF-8
 
-      # 7️⃣ Maven Package
+      # 8️⃣ Maven Package
       - name: Maven package
         run: mvn package -DskipTests -Dproject.build.sourceEncoding=UTF-8
 
-      # 8️⃣ Upload Artifact to Nexus (correct syntax)
+      # 9️⃣ Upload Artifact to Nexus
       - name: Upload Artifact to Nexus
         run: |
-          mvn deploy \
-            -DskipTests \
-            -DaltDeploymentRepository=nexus::default::${{ secrets.NEXUS_URL }} \
-            -Dnexus.username=${{ secrets.NEXUS_USERNAME }} \
-            -Dnexus.password=${{ secrets.NEXUS_PASSWORD }} \
-            -Dproject.build.sourceEncoding=UTF-8
+          mvn deploy -DskipTests -Dproject.build.sourceEncoding=UTF-8
 
-      # 9️⃣ Deploy WAR to Tomcat
+      # 🔟 Deploy WAR to Tomcat
       - name: Deploy to Tomcat
         run: |
-          curl -v -u ${{ secrets.TOMCAT_USER }}:${{ secrets.TOMCAT_PASSWORD }} \
+          curl -v -u ${TOMCAT_USER}:${TOMCAT_PASSWORD} \
             -T target/TrainBook-1.0.0-SNAPSHOT.war \
-            "http://${{ secrets.TOMCAT_HOST }}:8080/manager/text/deploy?path=/vcube140&update=true"
+            "http://${TOMCAT_HOST}:8080/manager/text/deploy?path=/vcube140&update=true"
