@@ -1,33 +1,15 @@
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
-          https://maven.apache.org/xsd/settings-1.0.0.xsd">
+<settings>
+    <servers>
+        <server>
+            <id>nexus-snapshots</id>
+            <username>admin</username>
+            <password>Gagan@123456</password>
+        </server>
 
-  <servers>
-    
-    <!-- Release Repo Auth -->
-    <server>
-      <id>nexus-releases</id>
-      <username>${env.NEXUS_USERNAME}</username>
-      <password>${env.NEXUS_PASSWORD}</password>
-    </server>
-
-    <!-- Snapshot Repo Auth -->
-    <server>
-      <id>nexus-snapshots</id>
-      <username>${env.NEXUS_USERNAME}</username>
-      <password>${env.NEXUS_PASSWORD}</password>
-    </server>
-
-  </servers>
-
-  <!-- OPTIONAL (not needed for deployment) -->
-  <mirrors>
-    <mirror>
-      <id>nexus-public</id>
-      <mirrorOf>*</mirrorOf>
-      <url>http://100.26.210.134:8081/repository/maven-public/</url>
-    </mirror>
-  </mirrors>
-
+        <server>
+            <id>nexus-releases</id>
+            <username>admin</username>
+            <password>Gagan@123456</password>
+        </server>
+    </servers>
 </settings>
